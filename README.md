@@ -49,6 +49,19 @@ function someFunction() {}
         }, false);
     }
     flush();
+
+    // If something happened in your application, but you want to continue, you can add the error yourself:
+    captureTransaction("request", async (tx: ApmTransaction) {
+        // If you catch your errors, we will not know about them.
+        try {
+            throw new Error("I do not like you")
+        } catch (err) {
+            // You can manually add them to the transaction, and they will be sent to Elastic APM as well.
+            tx.addError(err)
+        }
+
+        // Continue doing stuff
+    });
 }
 ```
 

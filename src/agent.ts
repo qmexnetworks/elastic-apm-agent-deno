@@ -81,6 +81,21 @@ export class ApmTransaction {
       started: spanCount,
     };
   }
+
+  private _errors: Array<ApmError> = [];
+  addError(err: Error) {
+    const apmError = new ApmError(err);
+    apmError.transaction_id = this.id;
+    apmError.trace_id = this.trace_id;
+    apmError.parent_id = this.id;
+    apmError.context = this.context;
+
+    this._errors.push(apmError);
+  }
+
+  get errors(): Array<ApmError> {
+    return this._errors;
+  }
 }
 
 /**
@@ -311,12 +326,10 @@ export async function captureTransaction(
     if (currentAgent) {
       currentAgent.sendTransaction(tx);
       if (error) {
-        const apmError = new ApmError(error);
-        apmError.transaction_id = tx.id;
-        apmError.trace_id = tx.trace_id;
-        apmError.parent_id = tx.id;
-        apmError.context = tx.context;
-        currentAgent.sendError(apmError);
+        tx.addError(error);
+        for (const err of tx.errors) {
+          currentAgent.sendError(err);
+        }
       }
 
       // In future versions, we may flush regularly in the background?
