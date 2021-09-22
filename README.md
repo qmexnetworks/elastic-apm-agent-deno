@@ -40,7 +40,15 @@ function someFunction() {}
 
         // Any errors you cause, will automatically get sent to Elastic APM
         throw new Error("I do not like you")
-    })
+    });
+
+    // If you do a lot of work and don't want to flush too often, you can set the flush parameter to `false` and flush yourself.
+    for (let i = 0; i < 50; i++) {
+        captureTransaction("request", async (tx: ApmTransaction) {
+            // Do stuff
+        }, false);
+    }
+    flush();
 }
 ```
 

@@ -284,7 +284,7 @@ export async function captureTransaction(
   type: string,
   // deno-lint-ignore no-explicit-any
   fn: (tx: ApmTransaction) => any,
-  ctx?: ApmContext,
+  flush = true,
   throwAgain = false,
 ): Promise<void> {
   let error: Error | undefined;
@@ -298,9 +298,6 @@ export async function captureTransaction(
 
     const begin = globalThis.performance.now();
     const tx = new ApmTransaction(0, type, 1);
-    if (ctx) {
-      tx.context = ctx;
-    }
 
     try {
       await fn(tx);
@@ -323,7 +320,9 @@ export async function captureTransaction(
       }
 
       // In future versions, we may flush regularly in the background?
-      await currentAgent.flush();
+      if (flush) {
+        await currentAgent.flush();
+      }
     }
   } catch (err) {
     console.warn("[APM] registered error in application:", err, err.stack);
@@ -331,5 +330,12 @@ export async function captureTransaction(
 
   if (throwAgain) {
     throw error;
+  }
+}
+
+/** Sends all messages that are in the queue to the Elastic APM server. */
+export function flush() {
+  if (currentAgent) {
+    currentAgent.flush();
   }
 }
