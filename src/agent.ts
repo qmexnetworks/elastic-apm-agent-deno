@@ -9,7 +9,7 @@ function throwException(message: string): never {
 /**
  * @link https://github.com/elastic/apm-server/blob/v7.14.1/docs/spec/v2/metadata.json
  */
-class ApmMetadata {
+export class ApmMetadata {
   service: {
     agent: {
       name: string;
@@ -55,7 +55,7 @@ class ApmMetadata {
 /**
  * @link https://github.com/elastic/apm-server/blob/v7.14.1/docs/spec/v2/transaction.json
  */
-class ApmTransaction {
+export class ApmTransaction {
   id: string;
   trace_id: string;
 
@@ -86,7 +86,7 @@ class ApmTransaction {
 /**
  * @link https://github.com/elastic/apm-server/blob/v7.14.1/docs/spec/v2/error.json
  */
-class ApmError {
+export class ApmError {
   id: string;
   trace_id?: string;
   transaction_id?: string;
@@ -292,9 +292,8 @@ export async function captureTransaction(
     if (!currentAgent) {
       console.warn(
         "[APM]",
-        "Unable to capture transaction: APM agent not registered",
+        "Unable to capture transaction: APM agent not registered. Running anyways.",
       );
-      return;
     }
 
     const begin = globalThis.performance.now();
@@ -312,18 +311,20 @@ export async function captureTransaction(
     const duration = globalThis.performance.now() - begin;
     tx.duration = duration;
 
-    currentAgent.sendTransaction(tx);
-    if (error) {
-      const apmError = new ApmError(error);
-      apmError.transaction_id = tx.id;
-      apmError.trace_id = tx.trace_id;
-      apmError.parent_id = tx.id;
-      apmError.context = tx.context;
-      currentAgent.sendError(apmError);
-    }
+    if (currentAgent) {
+      currentAgent.sendTransaction(tx);
+      if (error) {
+        const apmError = new ApmError(error);
+        apmError.transaction_id = tx.id;
+        apmError.trace_id = tx.trace_id;
+        apmError.parent_id = tx.id;
+        apmError.context = tx.context;
+        currentAgent.sendError(apmError);
+      }
 
-    // In future versions, we may flush regularly in the background?
-    await currentAgent.flush();
+      // In future versions, we may flush regularly in the background?
+      await currentAgent.flush();
+    }
   } catch (err) {
     console.warn("[APM] registered error in application:", err, err.stack);
   }

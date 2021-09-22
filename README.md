@@ -15,7 +15,7 @@ This is currently considered **unstable** and may change. However, it is used in
 ## Usage
 
 ```ts
-import { registerAgent } from 'https://deno.land/x/elastic_apm_agent_unofficial/src/agent.ts';
+import { registerAgent, captureTransaction, ApmTransaction } from 'https://deno.land/x/elastic_apm_agent_unofficial/src/agent.ts';
 
 function someFunction() {}
     // This initializes the APM agent using the environment variables. Alternatively, you can provide the URL and service name
@@ -27,7 +27,8 @@ function someFunction() {}
     // registerAgent("http://localhost:8200", "my-special-service-1");
 
     // Then you will want to do something. It is automatically benchmarked and afterwards sent to Elastic APM.
-    captureTransaction("request", async (tx) {
+    // You can call your transaction something, like "request" or "my-super-duper-task".
+    captureTransaction("request", async (tx: ApmTransaction) {
         // Here is your application code.
 
         // You have access to the APM transaction, meaning you can optionally add context:
