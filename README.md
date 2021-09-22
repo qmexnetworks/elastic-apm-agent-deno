@@ -57,7 +57,10 @@ function someFunction() {}
             throw new Error("I do not like you")
         } catch (err) {
             // You can manually add them to the transaction, and they will be sent to Elastic APM as well.
-            tx.addError(err)
+            const apmErr = tx.addError(err)
+            
+            // Optionally, you can provide more context on the error:
+            apmErr.context.user = { id: 6 }
         }
 
         // Continue doing stuff

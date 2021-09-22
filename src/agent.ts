@@ -83,14 +83,15 @@ export class ApmTransaction {
   }
 
   private _errors: Array<ApmError> = [];
-  addError(err: Error) {
+  addError(err: Error): ApmError {
     const apmError = new ApmError(err);
     apmError.transaction_id = this.id;
     apmError.trace_id = this.trace_id;
     apmError.parent_id = this.id;
-    apmError.context = this.context;
+    apmError.context = globalThis.structuredClone(this.context);
 
-    this._errors.push(apmError);
+    const length = this._errors.push(apmError);
+    return this._errors[length - 1];
   }
 
   get errors(): Array<ApmError> {
