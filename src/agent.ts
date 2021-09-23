@@ -230,6 +230,7 @@ export class ApmAgent {
   serverUrl: string;
   serviceName: string;
   nodeName?: string;
+  currentMetadata: ApmMetadata;
 
   // deno-lint-ignore no-explicit-any
   _queue: Array<{ [msgType: string]: any }> = [];
@@ -238,6 +239,7 @@ export class ApmAgent {
     this.serverUrl = serverUrl;
     this.serviceName = serviceName;
     this.nodeName = nodeName;
+    this.currentMetadata = new ApmMetadata(this.serviceName, this.nodeName);
   }
 
   /** Sends all messages that are in the queue to the Elastic APM server. */
@@ -247,7 +249,7 @@ export class ApmAgent {
     }
 
     const messages = [
-      { "metadata": new ApmMetadata(this.serviceName, this.nodeName) },
+      { "metadata": this.currentMetadata },
       ...this._queue,
     ];
     this._queue = [];
@@ -278,7 +280,7 @@ export class ApmAgent {
   }
 }
 
-let currentAgent: ApmAgent | undefined;
+export let currentAgent: ApmAgent | undefined;
 
 export function registerAgent(
   url = "http://localhost:8200",
