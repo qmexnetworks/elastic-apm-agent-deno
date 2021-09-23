@@ -235,13 +235,14 @@ export class ApmAgent {
   currentMetadata: ApmMetadata;
 
   // deno-lint-ignore no-explicit-any
-  _queue: Array<{ [msgType: string]: any }> = [];
+  _queue: Array<{ [msgType: string]: any }>;
 
   constructor(serverUrl: string, serviceName: string, nodeName?: string) {
     this.serverUrl = serverUrl;
     this.serviceName = serviceName;
     this.nodeName = nodeName;
     this.currentMetadata = new ApmMetadata(this.serviceName, this.nodeName);
+    this._queue = [];
   }
 
   /** Sends all messages that are in the queue to the Elastic APM server. */
