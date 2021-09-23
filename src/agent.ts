@@ -271,8 +271,7 @@ export class ApmAgent {
       await res.body?.cancel();
       return;
     }).catch((err) => {
-      console.error("[APM]", err);
-      throw err; // TODO: allow disabling this
+      console.error("[APM] Transactions not sent to Elastic APM:", err);
     });
   }
 
