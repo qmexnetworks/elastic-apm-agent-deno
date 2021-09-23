@@ -67,6 +67,7 @@ export class ApmMetadata {
 export class ApmTransaction {
   id: string;
   trace_id: string;
+  sampled = true;
 
   timestamp: number;
   duration: number; // in milliseconds with 3 decimal points
