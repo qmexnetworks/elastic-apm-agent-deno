@@ -303,10 +303,11 @@ export function registerAgent(
     safeEnv("ELASTIC_APM_SERVICE_NODE_NAME") ?? nodeName,
   );
 
-  updateInterval = setInterval(
-    currentAgent.flush,
-    Number(safeEnv("ELASTIC_APM_INTERVAL") ?? 2000),
-  );
+  updateInterval = setInterval(() => {
+    if (currentAgent) {
+      currentAgent.flush();
+    }
+  }, Number(safeEnv("ELASTIC_APM_INTERVAL") ?? 2000));
 
   return currentAgent;
 }
