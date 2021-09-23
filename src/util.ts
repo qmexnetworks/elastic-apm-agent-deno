@@ -18,7 +18,7 @@ export function randomHex(length: number): string {
 
 export function safeEnv(name: string): string | undefined {
   try {
-    Deno.env.get(name);
+    return Deno.env.get(name);
   } catch {
     return undefined;
   }

@@ -303,7 +303,7 @@ export function registerAgent(
     safeEnv("ELASTIC_APM_SERVICE_NODE_NAME") ?? nodeName,
   );
 
-  setInterval(
+  updateInterval = setInterval(
     currentAgent.flush,
     Number(safeEnv("ELASTIC_APM_INTERVAL") ?? 2000),
   );
@@ -373,12 +373,15 @@ export async function captureTransaction(
 /** Sends all messages that are in the queue to the Elastic APM server. */
 export function flush() {
   if (currentAgent) {
-    currentAgent.flush();
+    return currentAgent.flush();
   }
+
+  return Promise.resolve();
 }
 
 /** Close stops the APM Agent from flushing to the API, cleaning up any intervals and allowing the process to close. */
-export function close() {
+export async function close() {
+  await flush();
   if (updateInterval) {
     clearInterval(updateInterval);
   }

@@ -1,4 +1,4 @@
-import { captureTransaction, registerAgent } from "./agent.ts";
+import { captureTransaction, close, flush, registerAgent } from "./agent.ts";
 
 class myClass {
   constructor() {
@@ -18,4 +18,16 @@ Deno.test("send errors that heppen during transactions", async () => {
       c.crash();
     });
   });
+  await close();
+});
+
+Deno.test("flushing is always OK", async () => {
+  await flush();
+  await flush();
+  registerAgent();
+  await flush();
+  await flush();
+  await close();
+  await flush();
+  await flush();
 });
