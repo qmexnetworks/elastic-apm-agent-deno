@@ -1,4 +1,4 @@
-import { randomHex } from "./util.ts";
+import { randomHex, safeEnv } from "./util.ts";
 
 export const APM_AGENT_VERSION = "0.0.2"; // TODO: automatically update with git tag/release
 
@@ -27,10 +27,13 @@ export class ApmMetadata {
     system?: {
       detected_hostname?: string;
     };
+    node?: {
+      configured_name: string;
+    };
     name: string;
   };
 
-  constructor(serviceName: string) {
+  constructor(serviceName: string, nodeName?: string) {
     this.service = {
       agent: {
         name: "deno-unofficial",
@@ -45,10 +48,16 @@ export class ApmMetadata {
         version: Deno.version.v8,
       },
       system: {
-        detected_hostname: Deno.env.get("HOSTNAME"),
+        detected_hostname: safeEnv("HOSTNAME"),
       },
       name: serviceName,
     };
+
+    if (nodeName) {
+      this.service.node = { configured_name: nodeName };
+    }
+
+    this.service.environment = safeEnv("ELASTIC_APM_ENVIRONMENT");
   }
 }
 
@@ -220,13 +229,15 @@ let lastTrace: string;
 export class ApmAgent {
   serverUrl: string;
   serviceName: string;
+  nodeName?: string;
 
   // deno-lint-ignore no-explicit-any
   _queue: Array<{ [msgType: string]: any }> = [];
 
-  constructor(serverUrl: string, serviceName: string) {
+  constructor(serverUrl: string, serviceName: string, nodeName?: string) {
     this.serverUrl = serverUrl;
     this.serviceName = serviceName;
+    this.nodeName = nodeName;
   }
 
   /** Sends all messages that are in the queue to the Elastic APM server. */
@@ -236,7 +247,7 @@ export class ApmAgent {
     }
 
     const messages = [
-      { "metadata": new ApmMetadata(this.serviceName) },
+      { "metadata": new ApmMetadata(this.serviceName, this.nodeName) },
       ...this._queue,
     ];
     this._queue = [];
@@ -272,17 +283,19 @@ let currentAgent: ApmAgent | undefined;
 export function registerAgent(
   url = "http://localhost:8200",
   serviceName?: string,
+  nodeName?: string,
 ): ApmAgent {
   if (currentAgent) {
     return currentAgent;
   }
 
   currentAgent = new ApmAgent(
-    Deno.env.get("ELASTIC_APM_SERVER_URL") ?? url,
-    Deno.env.get("ELASTIC_APM_SERVICE_NAME") ?? serviceName ??
+    safeEnv("ELASTIC_APM_SERVER_URL") ?? url,
+    safeEnv("ELASTIC_APM_SERVICE_NAME") ?? serviceName ??
       throwException(
         "ELASTIC_APM_SERVICE_NAME environment variable is required but was empty",
       ),
+    safeEnv("ELASTIC_APM_SERVICE_NODE_NAME") ?? nodeName,
   );
 
   return currentAgent;

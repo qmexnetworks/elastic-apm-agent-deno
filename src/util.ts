@@ -15,3 +15,11 @@ export function randomHex(length: number): string {
   }
   return hex.join("");
 }
+
+export function safeEnv(name: string): string | undefined {
+  try {
+    Deno.env.get(name);
+  } catch {
+    return undefined;
+  }
+}
