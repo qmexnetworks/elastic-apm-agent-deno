@@ -76,6 +76,7 @@ export class ApmTransaction {
   };
   type: string;
   context: ApmContext = {};
+  outcome: "success" | "failure" | "unknown" | undefined;
 
   constructor(duration: number, txType: string, spanCount = 1) {
     this.id = randomHex(8);
@@ -349,6 +350,10 @@ export async function captureTransaction(
     tx.duration = duration;
 
     if (currentAgent) {
+      if (tx.outcome === undefined) {
+        tx.outcome = error ? "failure" : "success";
+      }
+
       currentAgent.sendTransaction(tx);
       if (error) {
         tx.addError(error);
