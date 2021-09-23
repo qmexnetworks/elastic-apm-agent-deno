@@ -68,6 +68,7 @@ export class ApmTransaction {
   id: string;
   trace_id: string;
 
+  timestamp: number;
   duration: number; // in milliseconds with 3 decimal points
   span_count: {
     dropped?: number;
@@ -79,6 +80,7 @@ export class ApmTransaction {
   constructor(duration: number, txType: string, spanCount = 1) {
     this.id = randomHex(8);
     this.trace_id = randomHex(16);
+    this.timestamp = Date.now() * 1000;
 
     // TODO: remove these lines
     lastTx = this.id;
@@ -300,6 +302,11 @@ export function registerAgent(
     safeEnv("ELASTIC_APM_SERVICE_NODE_NAME") ?? nodeName,
   );
 
+  setInterval(
+    currentAgent.flush,
+    Number(safeEnv("ELASTIC_APM_INTERVAL") ?? 2000),
+  );
+
   return currentAgent;
 }
 
@@ -315,7 +322,7 @@ export async function captureTransaction(
   type: string,
   // deno-lint-ignore no-explicit-any
   fn: (tx: ApmTransaction) => any,
-  flush = true,
+  flush?: boolean,
   throwAgain = false,
 ): Promise<void> {
   let error: Error | undefined;
@@ -368,3 +375,16 @@ export function flush() {
     currentAgent.flush();
   }
 }
+
+/** Close stops the APM Agent from flushing to the API, cleaning up any intervals and allowing the process to close. */
+export function close() {
+  if (updateInterval) {
+    clearInterval(updateInterval);
+  }
+  if (currentAgent) {
+    currentAgent = undefined;
+  }
+}
+
+/** updateInterval is the result of `setInterval` for the flushing mechanism. */
+let updateInterval: number;
