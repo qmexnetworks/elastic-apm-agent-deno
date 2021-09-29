@@ -1,4 +1,10 @@
-import { captureTransaction, close, flush, registerAgent } from "./agent.ts";
+import {
+  ApmMetricset,
+  captureTransaction,
+  close,
+  flush,
+  registerAgent,
+} from "./agent.ts";
 
 class myClass {
   constructor() {
@@ -30,4 +36,23 @@ Deno.test("flushing is always OK", async () => {
   await close();
   await flush();
   await flush();
+});
+
+Deno.test({
+  name: "can contain metrics",
+  fn: async () => {
+    const agent = registerAgent();
+    agent.loadMetricset = (): Promise<ApmMetricset> => {
+      const metrics = new ApmMetricset({
+        "connections": 16,
+      });
+
+      return Promise.resolve(metrics);
+    };
+
+    captureTransaction("test", () => {});
+
+    await flush();
+    await close();
+  },
 });

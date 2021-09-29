@@ -226,6 +226,23 @@ export class ApmUser {
   username?: string;
 }
 
+export class ApmMetricset {
+  timestamp: number;
+  samples: {
+    [key: string]: {
+      value: number;
+    };
+  } = {};
+
+  constructor(samples: { [key: string]: number }) {
+    this.timestamp = Date.now() * 1000;
+
+    for (const [k, v] of Object.entries(samples)) {
+      this.samples[k] = { value: v };
+    }
+  }
+}
+
 let lastTx: string;
 let lastTrace: string;
 
@@ -235,6 +252,7 @@ export class ApmAgent {
   serviceName: string;
   nodeName?: string;
   currentMetadata: ApmMetadata;
+  loadMetricset?: () => Promise<ApmMetricset>;
 
   // deno-lint-ignore no-explicit-any
   _queue: Array<{ [msgType: string]: any }>;
@@ -248,7 +266,7 @@ export class ApmAgent {
   }
 
   /** Sends all messages that are in the queue to the Elastic APM server. */
-  flush(): Promise<void> {
+  async flush(): Promise<void> {
     if (this._queue.length === 0) {
       return Promise.resolve(); // Nothing to flush
     }
@@ -258,6 +276,9 @@ export class ApmAgent {
       ...this._queue,
     ];
     this._queue = [];
+    if (this.loadMetricset) {
+      messages.push({ "metricset": await this.loadMetricset() });
+    }
 
     return fetch(`${this.serverUrl}/intake/v2/events`, {
       method: "POST",
