@@ -1,6 +1,6 @@
 import { randomHex, safeEnv } from "./util.ts";
 
-export const APM_AGENT_VERSION = "0.0.2"; // TODO: automatically update with git tag/release
+export const APM_AGENT_VERSION = "0.0.12"; // TODO: automatically update with git tag/release
 
 function throwException(message: string): never {
   throw new Error(message);
