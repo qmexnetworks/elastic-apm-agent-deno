@@ -18,7 +18,10 @@ class myClass {
 Deno.test("send errors that heppen during transactions", async () => {
   registerAgent();
   await captureTransaction("test", async (tx) => {
-    tx.context = { user: { username: "test-user-1" } };
+    tx.context = {
+      user: { username: "test-user-1" },
+      tags: { "custom_value": 5 },
+    };
     await new Promise(() => {
       const c = new myClass();
       c.crash();

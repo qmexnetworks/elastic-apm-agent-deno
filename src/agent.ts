@@ -216,6 +216,9 @@ export class ApmContext {
   user?: ApmUser;
 
   // deno-lint-ignore no-explicit-any
+  tags?: Record<string, any>;
+
+  // deno-lint-ignore no-explicit-any
   custom?: Record<string, any>;
 }
 
