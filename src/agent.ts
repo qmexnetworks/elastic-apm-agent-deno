@@ -371,7 +371,7 @@ export async function captureTransaction(
     }
 
     const duration = globalThis.performance.now() - begin;
-    tx.duration = duration;
+    tx.duration = Number(duration.toFixed(3));
 
     if (currentAgent) {
       if (tx.outcome === undefined) {
